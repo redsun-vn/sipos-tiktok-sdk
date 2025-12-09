@@ -31,9 +31,55 @@ Tài liệu trực tuyến: [TikTok Shop API SDK](https://partner.tiktokshop.com
 
 ### Các bước cài đặt
 
-**Bước 1:** Thêm thư mục SDK đã giải nén vào dự án của bạn
+#### Cách 1: Cài đặt từ NPM (Khuyến nghị)
 
-**Bước 2:** Cài đặt dependencies
+Nếu SDK đã được publish lên NPM:
+
+```bash
+# npm
+npm install tiktok-shop-nodejs-sdk
+
+# yarn
+yarn add tiktok-shop-nodejs-sdk
+
+# pnpm
+pnpm add tiktok-shop-nodejs-sdk
+```
+
+#### Cách 2: Sử dụng từ Source Code (Local Development)
+
+**Bước 1:** Clone hoặc copy thư mục SDK vào máy của bạn
+
+**Bước 2:** Build SDK
+
+```bash
+cd path/to/tiktok-shop-nodejs-sdk
+npm install
+npm run build
+```
+
+**Bước 3:** Link SDK globally (để sử dụng như module)
+
+```bash
+npm link
+```
+
+**Bước 4:** Trong dự án của bạn, link SDK
+
+```bash
+cd path/to/your-project
+npm link tiktok-shop-nodejs-sdk
+```
+
+#### Cách 3: Import trực tiếp từ Path
+
+Trong dự án của bạn, import trực tiếp từ đường dẫn:
+
+```typescript
+import { TikTokShopNodeApiClient } from '/absolute/path/to/tiktok-shop-nodejs-sdk';
+```
+
+**Bước 1:** Thêm dependencies vào dự án của bạn
 
 Thêm vào `package.json`:
 
@@ -51,7 +97,7 @@ Thêm vào `package.json`:
 }
 ```
 
-**Bước 3:** Cấu hình TypeScript
+**Bước 2:** Cấu hình TypeScript
 
 Thêm vào `tsconfig.json`:
 
@@ -66,7 +112,7 @@ Thêm vào `tsconfig.json`:
 }
 ```
 
-**Bước 4:** Cài đặt dependencies
+**Bước 3:** Cài đặt dependencies
 
 ```bash
 # npm
@@ -81,6 +127,18 @@ pnpm install
 
 ## Cấu hình
 
+### Import SDK
+
+Sau khi cài đặt, import SDK vào dự án của bạn:
+
+```typescript
+// Nếu cài đặt từ NPM
+import { ClientConfiguration, TikTokShopNodeApiClient } from 'tiktok-shop-nodejs-sdk';
+
+// Nếu sử dụng local link hoặc path
+import { ClientConfiguration, TikTokShopNodeApiClient } from 'tiktok-shop-nodejs-sdk';
+```
+
 ### Khởi tạo Client
 
 Có 2 cách để cấu hình SDK:
@@ -88,7 +146,7 @@ Có 2 cách để cấu hình SDK:
 #### Cách 1: Global Configuration (Khuyến nghị)
 
 ```typescript
-import { ClientConfiguration, TikTokShopNodeApiClient } from ".";
+import { ClientConfiguration, TikTokShopNodeApiClient } from 'tiktok-shop-nodejs-sdk';
 
 // Cấu hình global cho toàn bộ ứng dụng
 ClientConfiguration.globalConfig.app_key = "your_app_key";
@@ -105,7 +163,7 @@ const client = new TikTokShopNodeApiClient({
 #### Cách 2: Instance Configuration
 
 ```typescript
-import { ClientConfiguration, TikTokShopNodeApiClient } from ".";
+import { ClientConfiguration, TikTokShopNodeApiClient } from 'tiktok-shop-nodejs-sdk';
 
 const config = ClientConfiguration.createConfig()
   .setAppKey("your_app_key")
@@ -121,7 +179,7 @@ const client = new TikTokShopNodeApiClient({ config });
 ### Lấy Access Token từ Authorization Code
 
 ```typescript
-import { AccessTokenTool } from ".";
+import { AccessTokenTool } from 'tiktok-shop-nodejs-sdk';
 
 const authCode = "authorization_code_from_oauth";
 
@@ -144,7 +202,7 @@ try {
 ### Refresh Access Token
 
 ```typescript
-import { AccessTokenTool } from ".";
+import { AccessTokenTool } from 'tiktok-shop-nodejs-sdk';
 
 try {
   const tokenResponse = await AccessTokenTool.refreshToken(
@@ -165,7 +223,7 @@ try {
 ### Sử dụng AccessToken Class
 
 ```typescript
-import { AccessToken } from ".";
+import { AccessToken } from 'tiktok-shop-nodejs-sdk';
 
 const accessToken = new AccessToken({
   access_token: "your_access_token",
@@ -202,7 +260,7 @@ console.log(result.response.statusCode); // HTTP status code
 #### Chỉnh sửa sản phẩm (Partial Edit)
 
 ```typescript
-import { TikTokShopNodeApiClient, ClientConfiguration } from ".";
+import { TikTokShopNodeApiClient, ClientConfiguration } from 'tiktok-shop-nodejs-sdk';
 
 const client = new TikTokShopNodeApiClient({ config: {} });
 const accessToken = "your_access_token";
@@ -330,7 +388,7 @@ import {
   ClientConfiguration, 
   TikTokShopNodeApiClient, 
   AccessTokenTool 
-} from ".";
+} from 'tiktok-shop-nodejs-sdk';
 
 // Cấu hình
 ClientConfiguration.globalConfig.app_key = "your_app_key";
