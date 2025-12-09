@@ -112,18 +112,27 @@ Thêm vào `tsconfig.json`:
 }
 ```
 
-**Bước 3:** Cài đặt dependencies
+#### Cách 4: Cài đặt từ GitHub Repository
+
+Trong `package.json` của dự án NestJS:
+
+```json
+{
+  "dependencies": {
+    "tiktok-shop-nodejs-sdk": "github:redsun-vn/sipos-tiktok-sdk#main"
+  }
+}
+```
+
+Sau đó cài đặt:
 
 ```bash
-# npm
 npm install
-
-# yarn
+# hoặc
 yarn install
-
-# pnpm
-pnpm install
 ```
+
+**Lưu ý:** SDK cần được build trước khi sử dụng. Nếu gặp lỗi, hãy đảm bảo repository đã được build với `npm run build`.
 
 ## Cấu hình
 
@@ -379,9 +388,157 @@ Ví dụ:
 - `client.api.FulfillmentV202510Api.*` - Fulfillment API
 - `client.api.FinanceV202507Api.*` - Finance API
 
-## Ví dụ
+## Sử dụng trong NestJS
 
-### Ví dụ hoàn chỉnh: Quản lý sản phẩm
+### Tạo TikTok Shop Service
+
+Tạo file `tiktok-shop.service.ts`:
+
+```typescript
+import { Injectable } from '@nestjs/common';
+import {
+  ClientConfiguration,
+  TikTokShopNodeApiClient,
+  AccessTokenTool
+} from 'tiktok-shop-nodejs-sdk';
+
+@Injectable()
+export class TikTokShopService {
+  private client: TikTokShopNodeApiClient;
+
+  constructor() {
+    // Cấu hình từ environment variables
+    ClientConfiguration.globalConfig.app_key = process.env.TIKTOK_APP_KEY || '';
+    ClientConfiguration.globalConfig.app_secret = process.env.TIKTOK_APP_SECRET || '';
+
+    this.client = new TikTokShopNodeApiClient({
+      config: {
+        sandbox: process.env.NODE_ENV !== 'production'
+      }
+    });
+  }
+
+  async getAccessToken(authCode: string): Promise<string> {
+    try {
+      const tokenResponse = await AccessTokenTool.getAccessToken(
+        authCode,
+        ClientConfiguration.globalConfig.app_key,
+        ClientConfiguration.globalConfig.app_secret
+      );
+
+      return tokenResponse.body.data?.access_token || '';
+    } catch (error) {
+      throw new Error(`Failed to get access token: ${error.message}`);
+    }
+  }
+
+  async updateProduct(productId: string, accessToken: string, updateData: any) {
+    try {
+      const result = await this.client.api.ProductV202509Api.ProductsProductIdPartialEditPost(
+        productId,
+        accessToken,
+        'application/json',
+        undefined,
+        { product: updateData }
+      );
+
+      return result.body;
+    } catch (error) {
+      throw new Error(`Failed to update product: ${error.message}`);
+    }
+  }
+
+  async getOrders(orderIds: string[], accessToken: string) {
+    try {
+      const result = await this.client.api.OrderV202507Api.OrdersGet(
+        orderIds,
+        accessToken,
+        'application/json',
+        undefined
+      );
+
+      return result.body;
+    } catch (error) {
+      throw new Error(`Failed to get orders: ${error.message}`);
+    }
+  }
+}
+```
+
+### Tạo Module
+
+Tạo file `tiktok-shop.module.ts`:
+
+```typescript
+import { Module } from '@nestjs/common';
+import { TikTokShopService } from './tiktok-shop.service';
+
+@Module({
+  providers: [TikTokShopService],
+  exports: [TikTokShopService],
+})
+export class TikTokShopModule {}
+```
+
+### Sử dụng trong Controller
+
+```typescript
+import { Controller, Post, Body, Get, Param } from '@nestjs/common';
+import { TikTokShopService } from './tiktok-shop.service';
+
+@Controller('tiktok-shop')
+export class TikTokShopController {
+  constructor(private readonly tikTokShopService: TikTokShopService) {}
+
+  @Post('auth/token')
+  async getAccessToken(@Body('authCode') authCode: string) {
+    return {
+      accessToken: await this.tikTokShopService.getAccessToken(authCode)
+    };
+  }
+
+  @Post('products/:productId')
+  async updateProduct(
+    @Param('productId') productId: string,
+    @Body('accessToken') accessToken: string,
+    @Body('updateData') updateData: any
+  ) {
+    return await this.tikTokShopService.updateProduct(productId, accessToken, updateData);
+  }
+
+  @Get('orders')
+  async getOrders(
+    @Body('orderIds') orderIds: string[],
+    @Body('accessToken') accessToken: string
+  ) {
+    return await this.tikTokShopService.getOrders(orderIds, accessToken);
+  }
+}
+```
+
+### Import Module trong App
+
+Trong `app.module.ts`:
+
+```typescript
+import { Module } from '@nestjs/common';
+import { TikTokShopModule } from './tiktok-shop/tiktok-shop.module';
+
+@Module({
+  imports: [TikTokShopModule],
+})
+export class AppModule {}
+```
+
+### Cấu hình Environment Variables
+
+Tạo file `.env`:
+
+```env
+TIKTOK_APP_KEY=your_app_key_here
+TIKTOK_APP_SECRET=your_app_secret_here
+NODE_ENV=development  # hoặc production
+```
 
 ```typescript
 import { 
