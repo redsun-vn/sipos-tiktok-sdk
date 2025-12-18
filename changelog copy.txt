@@ -1,0 +1,2 @@
+ API Update The Blind Box Opening Results has been added. 
+ API: Create Activity, Get Activity, Get Conversation Messages, Get Order Detail, Get Order Detail, Get Order List, Send Message, Update Activity, Update Activity Product has been upgraded. 
